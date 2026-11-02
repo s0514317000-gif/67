@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>陰森爛片反應力測試</title>
+    <style>
+        /* 引入帶有詭異驚悚感的古風/黑體字型（若無法加載則退回 sans-serif） */
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@900&display=swap');
+
+        /* 全局基礎樣式重置 */
+        * {
+            box-sizing: border-box; /* 計算寬高時包含內邊距與邊框 */
+            margin: 0;             /* 清除預除外邊距 */
+            padding: 0;            /* 清除預設內邊距 */
+            user-select: none;     /* 防止玩家快速點擊時選取文字 */
+        }
+
+        /* 頁面整體陰森氛圍佈局 */
+        body {
+            background-color: #050505; /* 深沉黑底 */
+            color: #d1d1d1;           /* 灰白文字標題 */
+            font-family: 'Ma Shan Zheng', 'Noto Serif TC', serif; /* 詭異風格字型 */
+            display: flex;            /* 使用彈性盒模型垂直居中 */
+            flex-direction: column;   /* 垂直排列 */
+            align-items: center;      /* 水平居中 */
+            justify-content: center; /* 垂直居中 */
+            min-height: 100vh;        /* 滿屏高度 */
+            overflow: hidden;         /* 隱藏滾動條提升沉浸感 */
+            position: relative;       /* 為子元素的定位提供基準 */
+        }
+
+        /* 陰森爛片背景海報層 */
+        .poster-bg {
+            position: absolute;       /* 絕對定位覆蓋全屏 */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 模擬中國低成本陰森爛片風格：模糊古堡、低質感冥界紅綠綠配色 */
+            background: 
+                radial-gradient(circle, rgba(139, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.95) 75%),
+                linear-gradient(135deg, #0a1f0d 0%, #170000 50%, #000000 100%);
+            z-index: 1;               /* 置於底層 */
+            filter: contrast(150%) brightness(80%); /* 高對比、低亮度營造劣質驚悚感 */
+        }
+
+        /* 爛片老舊電視/膠捲噪點與閃爍濾鏡層 */
+        .flicker-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            ); /* 橫向掃描線，模擬劣質老舊畫面 */
+            pointer-events: none;     /* 避免阻擋滑鼠點擊事件 */
+            z-index: 2;
+            animation: flicker 0.15s infinite; /* 畫面微弱閃爍動畫 */
+        }
+
+        /* 掃描線閃爍 keyframes */
+        @keyframes flicker {
+            0% { opacity: 0.9; }
+            50% { opacity: 1.0; }
+            100% { opacity: 0.85; }
+        }
+
+        /* 遊戲核心主要容器 */
+        .game-container {
+            position: relative;       /* 位於濾鏡之上 */
+            z-index: 3;
+            width: 90%;
+            max-width: 600px;
+            background: rgba(15, 15, 15, 0.85); /* 半透明黑底 */
+            border: 3px solid #4a0404; /* 深血紅外框 */
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.9); /* 紅色血光陰影 */
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* 陰森爛片標題 */
+        h1 {
+            font-size: 2.8rem;
+            color: #8b0000;          /* 沉血紅色 */
+            text-shadow: 0 0 10px #ff0000, 2px 2px 5px #000; /* 血光發亮效果 */
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        /* 爛片副標題說明 */
+        .subtitle {
+            font-size: 1.1rem;
+            color: #7a8b7b;          /* 陰森幽靈綠色 */
+            margin-bottom: 25px;
+        }
+
+        /* 反應測試區域（主要點擊按鈕區） */
+        #click-zone {
+            width: 100%;
+            height: 220px;
+            border: 2px dashed #333;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+
+        /* 狀態一：等待開始（靜止狀態） */
+        #click-zone.state-idle {
+            background-color: #1a1a1a;
+            border-color: #555;
+            color: #aaa;
+        }
+
+        /* 狀態二：等待鬼魂出現（凝視狀態，隨機延遲中） */
+        #click-zone.state-waiting {
+            background-color: #0b1a0e; /* 幽暗陰森綠 */
+            border-color: #00ff44;
+            color: #00ff44;
+            box-shadow: inset 0 0 20px rgba(0, 255, 68, 0.2);
+        }
+
+        /* 狀態三：鬼魂出現（立刻點擊狀態） */
+        #click-zone.state-ready {
+            background-color: #660000; /* 鮮血紅色警告 */
+            border-color: #ff0000;
+            color: #ffffff;
+            animation: shake 0.1s infinite; /* 畫面劇烈震動效果 */
+            box-shadow: 0 0 40px #ff0000;
+        }
+
+        /* 鬼魂現身震動動畫 */
+        @keyframes shake {
+            0% { transform: translate(2px, 2px); }
+            25% { transform: translate(-2px, -2px); }
+            50% { transform: translate(-2px, 2px); }
+            75% { transform: translate(2px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* 測試區域文字說明 */
+        .zone-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            pointer-events: none;     /* 避免文字干擾區域點擊 */
+        }
+
+        /* 爛片搞笑恐怖配圖/文字 */
+        .trash-quote {
+            font-size: 0.95rem;
+            color: #888;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* 計分與紀錄區 */
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.2rem;
+            color: #bbb;
+            margin-top: 15px;
+            border-top: 1px solid #333;
+            padding-top: 15px;
+        }
+
+        .stats span {
+            color: #ff4444;          /* 紅色凸顯數值 */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景特效結構 -->
+    <div class="poster-bg"></div>        <!-- 陰森爛片海報風格背景圖片濾鏡 -->
+    <div class="flicker-overlay"></div>  <!-- 模擬老舊電視閃爍與掃描線 -->
+
+    <!-- 主遊戲內容面板 -->
+    <div class="game-container">
+        <!-- 陰森爛片風格標題與標語 -->
+        <h1>筆仙靈異大反撲</h1>
+        <p class="subtitle">—— 網劇《陰陽九叔之九幽血棺》聯動特輯 ——</p>
+        
+        <!-- 主要反應測試互動區域 -->
+        <div id="click-zone" class="state-idle">
+            <div class="zone-text" id="zone-text">點擊此處 召喚厲鬼</div>
+            <div class="trash-quote" id="trash-quote">「爛片特效只要五毛，但你的命只有條！」</div>
+        </div>
+
+        <!-- 數據統計區塊 -->
+        <div class="stats">
+            <div>本次反應時間: <span id="current-time">--</span> ms</div>
+            <div>最佳驅魔速度: <span id="best-time">--</span> ms</div>
+        </div>
+    </div>
+
+    <script>
+        // === 獲取 HTML DOM 元素引用 ===
+        const clickZone = document.getElementById('click-zone');      // 反應測試區
+        const zoneText = document.getElementById('zone-text');        // 主提示文字
+        const trashQuote = document.getElementById('trash-quote');    // 爛片搞笑金句
+        const currentTimeEl = document.getElementById('current-time'); // 本次時間顯示
+        const bestTimeEl = document.getElementById('best-time');       // 最佳時間顯示
+
+        // === 遊戲狀態與時間變數定義 ===
+        let gameState = 'idle'; // 當前遊戲狀態：'idle' (待機), 'waiting' (隨機等待中), 'ready' (現身需點擊)
+        let startTime = 0;      // 厲鬼現身時的精確時間戳 (毫秒)
+        let timerId = null;     // setTimeout 定時器 ID
+        let bestTime = Infinity;// 最佳反應時間紀錄（初始設為無窮大）
+
+        // === 爛片金句庫：專屬於低成本陰森中國爛片的經典台詞與吐槽 ===
+        const quotesWaiting = [
+            "「導演：五毛特效渲染中，請耐心等待……」",
+            "「道長正在背誦大悲咒，請勿打擾……」",
+            "「女鬼正在後臺補妝，準備嚇人……」",
+            "「劇組經費不足，厲鬼可能遲到……」"
+        ];
+
+        const quotesReady = [
+            "「血腥特效出現了！快按啊！！！」",
+            "「九叔驚呼：這鬼有毒！快點擊擊退它！」",
+            "「厲鬼強行加戲！快用點擊打散它！」"
+        ];
+
+        const quotesTooEarly = [
+            "「穿幫了！鬼都還沒出來你按什麼按？（犯規）」",
+            "「導演喊卡！搶拍要扣五毛錢工資！」",
+            "「道長表示：心急吃不了熱豆腐，重來！」"
+        ];
+
+        // === 隨機取得陣列內元素的輔助函數 ===
+        function getRandomQuote(quoteArray) {
+            const randomIndex = Math.floor(Math.random() * quoteArray.length); // 計算隨機索引
+            return quoteArray[randomIndex];                                   // 返回對應字串
+        }
+
+        // === 切換至「等待狀態」邏輯 ===
+        function startWaiting() {
+            gameState = 'waiting'; // 更新狀態為等待中
+
+            // 更新 DOM 類別以套用 CSS 幽靈綠風格
+            clickZone.className = 'state-waiting';
+            zoneText.textContent = '屏息凝視…… 厲鬼隨時出現！';
+            trashQuote.textContent = getRandomQuote(quotesWaiting);
+
+            // 產生 2 秒到 5 秒之間的隨機延遲時間 (2000ms ~ 5000ms)
+            const randomDelay = Math.floor(Math.random() * 3000) + 2000;
+
+            // 設定定時器，時間到後觸發鬼魂現身
+            timerId = setTimeout(triggerReady, randomDelay);
+        }
+
+        // === 切換至「厲鬼現身/反應狀態」邏輯 ===
+        function triggerReady() {
+            gameState = 'ready'; // 更新狀態為可點擊
+
+            // 更新 DOM 類別以套用 CSS 鮮血紅震動風格
+            clickZone.className = 'state-ready';
+            zoneText.textContent = '【鬼 出 現 了 ！】快 點 擊 ！】';
+            trashQuote.textContent = getRandomQuote(quotesReady);
+
+            // 紀錄當前的高精度時間戳 (毫秒)
+            startTime = Date.now();
+        }
+
+        // === 處理玩家點擊測試區域的邏輯 ===
+        clickZone.addEventListener('click', function() {
+            if (gameState === 'idle') {
+                // 如果目前是待機狀態，點擊後開始測試
+                startWaiting();
+            } 
+            else if (gameState === 'waiting') {
+                // 如果鬼還沒出來就提前點擊（過早犯規）
+                clearTimeout(timerId); // 清除定時器，防止後續繼續觸發 triggerReady
+                gameState = 'idle';
+
+                // 恢復待機樣式並提示搶拍犯規
+                clickZone.className = 'state-idle';
+                zoneText.textContent = '過早點擊！召喚失敗！';
+                trashQuote.textContent = getRandomQuote(quotesTooEarly);
+            } 
+            else if (gameState === 'ready') {
+                // 成功在鬼出現後點擊，計算反應時間
+                const endTime = Date.now();                  // 獲取點擊時的時間戳
+                const reactionTime = endTime - startTime;    // 計算時間差 (毫秒)
+
+                // 更新當前反應時間顯示
+                currentTimeEl.textContent = reactionTime;
+
+                // 檢查並更新歷史最佳紀錄
+                if (reactionTime < bestTime) {
+                    bestTime = reactionTime;
+                    bestTimeEl.textContent = bestTime;       // 更新最佳紀錄顯示
+                }
+
+                // 完成測試，重置回待機狀態
+                gameState = 'idle';
+                clickZone.className = 'state-idle';
+                zoneText.textContent = `驅魔成功！耗時 ${reactionTime} ms (點擊再次挑戰)`;
+                trashQuote.textContent = "「恭喜你成功活過了本集爛片！」";
+            }
+        });
+    </script>
+</body>
+</html>
